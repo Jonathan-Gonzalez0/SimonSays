@@ -5,10 +5,10 @@ void ofApp::setup()
 {
 
 	// Let's create our buttons
-	RedButton = new Button(ofGetWindowWidth() / 2 - 20, ofGetWindowHeight() / 2 - 260, 302, 239, "images/RedButton.png", "sounds/YellowButton.mp3");
-	BlueButton = new Button(ofGetWindowWidth() / 2 + 35, ofGetWindowHeight() / 2 - 10, 236, 290, "images/BlueButton.png", "sounds/YellowButton.mp3");
+	RedButton = new Button(ofGetWindowWidth() / 2 - 20, ofGetWindowHeight() / 2 - 260, 302, 239, "images/RedButton.png", "sounds/RedButton.mp3");
+	BlueButton = new Button(ofGetWindowWidth() / 2 + 35, ofGetWindowHeight() / 2 - 10, 236, 290, "images/BlueButton.png", "sounds/BlueButton.mp3");
 	YellowButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 + 40, 287, 239, "images/YellowButton.png", "sounds/YellowButton.mp3");
-	GreenButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 - 260, 234, 294, "images/GreenButton.png", "sounds/YellowButton.mp3");
+	GreenButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 - 260, 234, 294, "images/GreenButton.png", "sounds/GreenButton.mp3");
 
 	// Load the glowing images for the buttons
 	redLight.load("images/RedLight.png");
@@ -219,10 +219,12 @@ void ofApp::lightOn(Buttons color)
 	if (color == RED)
 	{
 		RedButton->toggleLightOn();
+		RedButton->playSound();
 	}
 	else if (color == BLUE)
 	{
 		BlueButton->toggleLightOn();
+		BlueButton->playSound();
 	}
 	else if (color == YELLOW)
 	{
@@ -232,6 +234,7 @@ void ofApp::lightOn(Buttons color)
 	else if (color == GREEN)
 	{
 		GreenButton->toggleLightOn();
+		GreenButton->playSound();
 	}
 }
 
