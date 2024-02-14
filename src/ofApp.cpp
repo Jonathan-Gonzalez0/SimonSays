@@ -273,6 +273,9 @@ void ofApp::keyPressed(int key)
 	{
 		GameReset();
 	}
+	if((!idle || gameState ==  GameOver) && key == OF_KEY_BACKSPACE){
+		gameState = StartUp;
+	}
 }
 
 //--------------------------------------------------------------
