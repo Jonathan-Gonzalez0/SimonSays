@@ -9,7 +9,7 @@ void ofApp::setup()
 	BlueButton = new Button(ofGetWindowWidth() / 2 + 35, ofGetWindowHeight() / 2 - 10, 236, 290, "images/BlueButton.png", "sounds/BlueButton.mp3");
 	YellowButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 + 40, 287, 239, "images/YellowButton.png", "sounds/YellowButton.mp3");
 	GreenButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 - 260, 234, 294, "images/GreenButton.png", "sounds/GreenButton.mp3");
-
+	NewGameMode = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 400, 225, 200, "images/FreetapGameMode.png", "sounds/GreenButton.mp3");
 	// Load the glowing images for the buttons
 	redLight.load("images/RedLight.png");
 	blueLight.load("images/BlueLight.png");
@@ -28,6 +28,7 @@ void ofApp::setup()
 	backgroundMusic.play();
 
 	// Initial State
+	
 	gameState = StartUp;
 }
 //--------------------------------------------------------------
@@ -36,7 +37,8 @@ void ofApp::update()
 
 	// We will tick the buttons, aka constantly update them
 	// while expecting input from the user to see if anything changed
-	if (gameState == PlayerInput)
+
+	if (gameState == PlayerInput || gameState == FreeTap)
 	{
 		RedButton->tick();
 		BlueButton->tick();
@@ -82,6 +84,7 @@ void ofApp::draw()
 	BlueButton->render();
 	YellowButton->render();
 	GreenButton->render();
+	NewGameMode->render();
 
 	// This whole if statement will take care of showing
 	// the sequence to the user before accepting any input
@@ -291,7 +294,39 @@ void ofApp::mousePressed(int x, int y, int button)
 {
 	// If we're not in Idle and the gameState equals PlayerInput,
 	// We will pay attention to the mousePresses from the user
-	if (!idle && gameState == PlayerInput)
+	NewGameMode -> setPressed(x,y);
+	if(!idle && NewGameMode->wasPressed()){
+// We mark the pressed button as "pressed"
+		gameState = FreeTap;
+		RedButton->setPressed(x, y);
+		BlueButton->setPressed(x, y);
+		YellowButton->setPressed(x, y);
+		GreenButton->setPressed(x, y);
+
+		// We check which button got pressed
+		if (RedButton->wasPressed())
+		{
+			color = RED;
+		}
+		else if (BlueButton->wasPressed())
+		{
+			color = BLUE;
+		}
+		else if (YellowButton->wasPressed())
+		{
+			color = YELLOW;
+		}
+		else if (GreenButton->wasPressed())
+		{
+			color = GREEN;
+		}
+		// Light up the pressed button for a few ticks
+		lightOn(color);
+		lightDisplayDuration = 15;
+
+	} 
+
+	if(!idle && gameState == PlayerInput)
 	{
 		// We mark the pressed button as "pressed"
 		RedButton->setPressed(x, y);

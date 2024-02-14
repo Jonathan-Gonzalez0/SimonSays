@@ -10,7 +10,8 @@ class ofApp : public ofBaseApp{
 		StartUp,
 		PlayingSequence,
 		PlayerInput,
-		GameOver
+		GameOver,
+		FreeTap
 	};
 
 	public:
@@ -48,6 +49,7 @@ class ofApp : public ofBaseApp{
 		Button *BlueButton;
 		Button *YellowButton;
 		Button *GreenButton;
+		Button *NewGameMode;
 
 		//These will be mere images which we will draw on top
 		//of the actual buttons to give the mere illusion
