@@ -9,7 +9,8 @@ void ofApp::setup()
 	BlueButton = new Button(ofGetWindowWidth() / 2 + 35, ofGetWindowHeight() / 2 - 10, 236, 290, "images/BlueButton.png", "sounds/BlueButton.mp3");
 	YellowButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 + 40, 287, 239, "images/YellowButton.png", "sounds/YellowButton.mp3");
 	GreenButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 - 260, 234, 294, "images/GreenButton.png", "sounds/GreenButton.mp3");
-	NewGameMode = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 400, 225, 200, "images/FreetapGameMode.png", "sounds/GreenButton.mp3");
+	NewGameMode = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 400, 225, 200, "images/freeTap.png", "sounds/GreenButton.mp3");
+	
 	// Load the glowing images for the buttons
 	redLight.load("images/RedLight.png");
 	blueLight.load("images/BlueLight.png");
@@ -292,18 +293,16 @@ void ofApp::mouseDragged(int x, int y, int button)
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button)
 {
-	// If we're not in Idle and the gameState equals PlayerInput,
-	// We will pay attention to the mousePresses from the user
+	
 	NewGameMode -> setPressed(x,y);
 	if(!idle && NewGameMode->wasPressed()){
-// We mark the pressed button as "pressed"
+
 		gameState = FreeTap;
 		RedButton->setPressed(x, y);
 		BlueButton->setPressed(x, y);
 		YellowButton->setPressed(x, y);
 		GreenButton->setPressed(x, y);
 
-		// We check which button got pressed
 		if (RedButton->wasPressed())
 		{
 			color = RED;
@@ -320,10 +319,9 @@ void ofApp::mousePressed(int x, int y, int button)
 		{
 			color = GREEN;
 		}
-		// Light up the pressed button for a few ticks
+
 		lightOn(color);
 		lightDisplayDuration = 15;
-
 	} 
 
 	if(!idle && gameState == PlayerInput)
