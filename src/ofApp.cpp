@@ -273,7 +273,7 @@ void ofApp::keyPressed(int key)
 	{
 		GameReset();
 	}
-	if((!idle || gameState ==  GameOver) && key == OF_KEY_BACKSPACE){
+	if(key == OF_KEY_BACKSPACE){
 		gameState = StartUp;
 	}
 }
@@ -296,11 +296,15 @@ void ofApp::mouseDragged(int x, int y, int button)
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button)
 {
-	
-	NewGameMode -> setPressed(x,y);
-	if(!idle && NewGameMode->wasPressed()){
+	if(gameState == StartUp){
+		NewGameMode->setPressed(x, y);
+		if(NewGameMode->wasPressed()){
+			idle = false;
+			gameState = FreeTap;
+		}
+	}
 
-		gameState = FreeTap;
+	if(NewGameMode->wasPressed()){
 		RedButton->setPressed(x, y);
 		BlueButton->setPressed(x, y);
 		YellowButton->setPressed(x, y);
@@ -322,7 +326,6 @@ void ofApp::mousePressed(int x, int y, int button)
 		{
 			color = GREEN;
 		}
-
 		lightOn(color);
 		lightDisplayDuration = 15;
 	} 
