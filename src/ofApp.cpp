@@ -38,8 +38,14 @@ void ofApp::update()
 
 	// We will tick the buttons, aka constantly update them
 	// while expecting input from the user to see if anything changed
+	if ( gameState == FreeTap)
+	{
+		RedButton->tick();
+		BlueButton->tick();
+		YellowButton->tick();
+		GreenButton->tick();}
 
-	if (gameState == PlayerInput || gameState == FreeTap)
+	if (gameState == PlayerInput)
 	{
 		RedButton->tick();
 		BlueButton->tick();
@@ -85,7 +91,8 @@ void ofApp::draw()
 	BlueButton->render();
 	YellowButton->render();
 	GreenButton->render();
-	NewGameMode->render();
+	if(gameState == StartUp){
+	NewGameMode->render();}
 
 	// This whole if statement will take care of showing
 	// the sequence to the user before accepting any input
@@ -299,12 +306,12 @@ void ofApp::mousePressed(int x, int y, int button)
 	if(gameState == StartUp){
 		NewGameMode->setPressed(x, y);
 		if(NewGameMode->wasPressed()){
-			idle = false;
+			idle = false; //Why?
 			gameState = FreeTap;
 		}
 	}
 
-	if(NewGameMode->wasPressed()){
+	if(gameState == FreeTap){
 		RedButton->setPressed(x, y);
 		BlueButton->setPressed(x, y);
 		YellowButton->setPressed(x, y);
