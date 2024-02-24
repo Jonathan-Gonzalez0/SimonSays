@@ -11,7 +11,9 @@ class ofApp : public ofBaseApp{
 		PlayingSequence,
 		PlayerInput,
 		GameOver,
-		FreeTap
+		FreeTap,
+		Record,
+		Play
 	};
 
 	public:
@@ -38,11 +40,13 @@ class ofApp : public ofBaseApp{
 		bool checkUserInput(Buttons c);
 		void GameReset();
 		void startUpSequence(int count);
+
 		
 	private:
 		//This vector will basically act as list of button enums
 		//for us to be able to store the sequences
 		vector<Buttons> Sequence;
+		vector<Buttons> FreeTapSequence;
 
 		//Let's declare the buttons we will use
 		Button *RedButton;
@@ -74,5 +78,8 @@ class ofApp : public ofBaseApp{
 		bool logoIsReady = false;
 		int logoCounter = 0;
 		bool idle = true;
+		int FreeTapCounter = 0;
+		int FreeTapLim;
+		int FreeTapDuration =0;
 		
 };

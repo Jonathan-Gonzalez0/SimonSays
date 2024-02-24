@@ -38,7 +38,7 @@ void ofApp::update()
 
 	// We will tick the buttons, aka constantly update them
 	// while expecting input from the user to see if anything changed
-	if ( gameState == FreeTap)
+	if ( gameState == FreeTap || gameState == Record)
 	{
 		RedButton->tick();
 		BlueButton->tick();
@@ -98,6 +98,7 @@ void ofApp::draw()
 	// the sequence to the user before accepting any input
 	if (gameState == PlayingSequence)
 	{
+		
 		showingSequenceDuration++;
 		if (showingSequenceDuration == 120)
 		{
@@ -119,6 +120,31 @@ void ofApp::draw()
 			gameState = PlayerInput;
 		}
 	}
+
+	if(gameState == Play)
+	{
+		FreeTapDuration++;
+		if(FreeTapDuration ==120)
+		{
+			color = FreeTapSequence[FreeTapCounter];
+			lightOn(color);
+			lightDisplayDuration = 30;
+			
+		}
+			
+		if (FreeTapDuration ==140)
+		{
+			lightOff(color);
+			FreeTapDuration = 60;
+			FreeTapCounter++;
+		}
+			if (FreeTapCounter == FreeTapLim)
+		{
+			gameState = FreeTap;
+		}
+		
+	}
+	
 
 	// StartUP (You dont need to pay much attention to this)
 	//(This is only to create a animation effect at the start of the game)
@@ -184,6 +210,7 @@ void ofApp::GameReset()
 void ofApp::generateSequence()
 {
 
+
 	// This function will generate a random number between 0 and 3
 	int random = ofRandom(4);
 
@@ -205,8 +232,10 @@ void ofApp::generateSequence()
 		Sequence.push_back(BLUE);
 	}
 
-	// We will adjust the sequence limit to the new size of the Sequence list
+		// We will adjust the sequence limit to the new size of the Sequence list
 	sequenceLimit = Sequence.size();
+	
+	
 }
 //--------------------------------------------------------------
 bool ofApp::checkUserInput(Buttons input)
@@ -283,6 +312,26 @@ void ofApp::keyPressed(int key)
 	if(key == OF_KEY_BACKSPACE){
 		gameState = StartUp;
 	}
+	if(gameState== FreeTap || gameState == Record || gameState == Play){
+		if(tolower(key) =='r' && FreeTapCounter ==0){
+			gameState = Record;
+		}
+		else if(tolower(key) == 'r' && gameState == Record){
+			gameState = FreeTap;
+		}
+		else if(tolower(key) == 'r' && FreeTapCounter != 0){
+			FreeTapSequence.clear();
+			FreeTapCounter = 0;
+			gameState = Record;
+		}
+	}
+	if(tolower(key) == 'p'){
+		gameState = Play;
+		FreeTapDuration = 60;
+		FreeTapLim = FreeTapSequence.size();
+		FreeTapCounter = 0;
+
+	}
 }
 
 //--------------------------------------------------------------
@@ -311,6 +360,42 @@ void ofApp::mousePressed(int x, int y, int button)
 		}
 	}
 
+	if(gameState == Record){
+		RedButton->setPressed(x, y);
+		BlueButton->setPressed(x, y);
+		YellowButton->setPressed(x, y);
+		GreenButton->setPressed(x, y);
+
+		if (RedButton->wasPressed())
+		{
+			color = RED;
+			FreeTapSequence.push_back(RED);
+			FreeTapCounter++; //Counts how many timwes we pressed the color.
+		
+		}
+		else if (BlueButton->wasPressed())
+		{
+			color = BLUE;
+			FreeTapSequence.push_back(BLUE);
+			FreeTapCounter++;
+		}
+		else if (YellowButton->wasPressed())
+		{
+			color = YELLOW;
+			FreeTapSequence.push_back(YELLOW);
+			FreeTapCounter++;
+		}
+		else if (GreenButton->wasPressed())
+		{
+			color = GREEN;
+			FreeTapSequence.push_back(GREEN);
+			FreeTapCounter++;
+		}
+		lightOn(color);
+		lightDisplayDuration = 15;
+
+	}
+
 	if(gameState == FreeTap){
 		RedButton->setPressed(x, y);
 		BlueButton->setPressed(x, y);
@@ -320,6 +405,7 @@ void ofApp::mousePressed(int x, int y, int button)
 		if (RedButton->wasPressed())
 		{
 			color = RED;
+		
 		}
 		else if (BlueButton->wasPressed())
 		{
@@ -484,3 +570,4 @@ void ofApp::startUpSequence(int count)
 		idle = false;
 	}
 }
+
