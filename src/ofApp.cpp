@@ -10,7 +10,8 @@ void ofApp::setup()
 	YellowButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 + 40, 287, 239, "images/YellowButton.png", "sounds/YellowButton.mp3");
 	GreenButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 - 260, 234, 294, "images/GreenButton.png", "sounds/GreenButton.mp3");
 	NewGameMode = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 400, 225, 200, "images/freeTap.png", "sounds/GreenButton.mp3");
-	
+	MultiplayerGM = new Button(ofGetWindowWidth() / 2 - 440, ofGetWindowHeight() / 2 - 250, 150, 150, "images/multiplayerButtonImage.png", "sounds/YellowButton.mp3");
+
 	// Load the glowing images for the buttons
 	redLight.load("images/RedLight.png");
 	blueLight.load("images/BlueLight.png");
@@ -22,6 +23,7 @@ void ofApp::setup()
 	logoLight.load("images/LogoLight.png");
 	startUpScreen.load("images/StartScreen.png");
 	gameOverScreen.load("images/GameOverScreen.png");
+	recordingIndicator.load("images/recordIndicator.png");
 
 	// Load Music
 	backgroundMusic.load("sounds/BackgroundMusic.mp3");
@@ -43,7 +45,8 @@ void ofApp::update()
 		RedButton->tick();
 		BlueButton->tick();
 		YellowButton->tick();
-		GreenButton->tick();}
+		GreenButton->tick();
+	}
 
 	if (gameState == PlayerInput)
 	{
@@ -64,6 +67,33 @@ void ofApp::update()
 		}
 	}
 
+	if (gameState == MultiplayerInput)
+	{
+		RedButton->tick();
+		BlueButton->tick();
+		YellowButton->tick();
+		GreenButton->tick();
+
+		// If the amount of user input equals the sequence limit
+		// that means the user has successfully completed the whole
+		// sequence and we can proceed with the next level
+		if (player1Index == player1SequenceLim && player1turn == true)
+		{
+			player1turn = false;
+			MultiplayerSequenceDuration= 0;
+			gameState = MultiplayerSequence;
+
+		}
+		if(player2Index == player2SequenceLim && player1turn == false){
+			player1turn = true;
+			gameState = MultiplayerSequence;
+			generateSequence();
+			player1Index = 0;
+			player2Index = 0;
+			MultiplayerSequenceDuration = 0;
+
+		}
+	}
 	// This will take care of turning on the lights after a few
 	// ticks so that they dont stay turned on forever or too long
 	if (lightDisplayDuration > 0)
@@ -91,8 +121,15 @@ void ofApp::draw()
 	BlueButton->render();
 	YellowButton->render();
 	GreenButton->render();
+
+	if(gameState == Record){
+		recordingIndicator.draw(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 400, 225, 200);
+	}
+
 	if(gameState == StartUp){
-	NewGameMode->render();}
+		NewGameMode->render();
+		MultiplayerGM->render();
+	}
 
 	// This whole if statement will take care of showing
 	// the sequence to the user before accepting any input
@@ -143,6 +180,53 @@ void ofApp::draw()
 			gameState = FreeTap;
 		}
 		
+
+
+}	
+	if(gameState == MultiplayerSequence){
+		MultiplayerSequenceDuration++;
+
+		if(MultiplayerSequenceDuration==120 && player1turn==true){
+
+			color=Player1Seq[player1Index];
+
+			lightOn(color);
+
+			lightDisplayDuration=30;
+		}
+		if (MultiplayerSequenceDuration == 140 && player1turn == true)
+		{
+			lightOff(color);
+			MultiplayerSequenceDuration = 60;
+			player1Index++;
+		}
+		if (player1Index == player1SequenceLim &&  player1turn == true)
+		{
+			lightOff(color);
+			player1Index = 0;
+			gameState = MultiplayerInput;
+		}
+		if(MultiplayerSequenceDuration==120 && player1turn == false){
+
+			color=Player2Seq[player2Index];
+
+			lightOn(color);
+
+			lightDisplayDuration=30;
+		}
+		if (MultiplayerSequenceDuration == 140 && player1turn == false)
+		{
+			lightOff(color);
+			MultiplayerSequenceDuration = 60;
+			player2Index++;
+		}
+		if (player2Index == player2SequenceLim && player1turn == false)
+		{
+			lightOff(color);
+			player2Index = 0;
+			gameState = MultiplayerInput;
+		}
+
 	}
 	
 
@@ -195,45 +279,100 @@ void ofApp::draw()
 void ofApp::GameReset()
 {
 	// This function will reset the game to its initial state
-	lightOff(RED);
-	lightOff(BLUE);
-	lightOff(YELLOW);
-	lightOff(GREEN);
-	Sequence.clear();
-	generateSequence();
-	userIndex = 0;
-	gameState = PlayingSequence;
-	showingSequenceDuration = 0;
+	// and generate a new sequence
+	if(gameState == Multiplayer){
+		lightOff(RED);
+		lightOff(BLUE);
+		lightOff(YELLOW);
+		lightOff(GREEN);
+		Player1Seq.clear();
+		Player2Seq.clear();
+		gameState = MultiplayerSequence;
+		player1Index = 0;
+		player2Index = 0;
+		generateSequence();
+		MultiplayerSequenceDuration = 0;
+		
+		
+		
+	}else{
+		lightOff(RED);
+		lightOff(BLUE);
+		lightOff(YELLOW);
+		lightOff(GREEN);
+		Sequence.clear();
+		generateSequence();
+		userIndex = 0;
+		gameState = PlayingSequence;
+		showingSequenceDuration = 0;
+	}	
 }
 
 //--------------------------------------------------------------
 void ofApp::generateSequence()
 {
-
-
 	// This function will generate a random number between 0 and 3
 	int random = ofRandom(4);
+	if(gameState == MultiplayerSequence){
+		random = ofRandom(4);
+		if(player1turn==true){
+			if(random==0){
 
-	// Depending on the random number, we will add a button to the sequence
-	if (random == 0)
-	{
-		Sequence.push_back(RED);
-	}
-	else if (random == 1)
-	{
-		Sequence.push_back(GREEN);
-	}
-	else if (random == 2)
-	{
-		Sequence.push_back(YELLOW);
-	}
-	else if (random == 3)
-	{
-		Sequence.push_back(BLUE);
-	}
+				Player1Seq.push_back(RED);
 
-		// We will adjust the sequence limit to the new size of the Sequence list
-	sequenceLimit = Sequence.size();
+			}else if (random == 1){	
+
+				Player1Seq.push_back(GREEN);
+
+			}else if (random == 2){
+
+				Player1Seq.push_back(YELLOW);
+
+			}else if (random == 3){
+
+				Player1Seq.push_back(BLUE);
+
+			}
+			player1turn = false;
+			player1SequenceLim = Player1Seq.size();
+		}
+		random = ofRandom(4);
+		if(player1turn==false){
+				if(random==0){
+					Player2Seq.push_back(RED);
+				}else if (random == 1){	
+					Player2Seq.push_back(GREEN);
+				}else if (random == 2){
+					Player2Seq.push_back(YELLOW);
+				}else if (random == 3){
+					Player2Seq.push_back(BLUE);
+				}
+			player2SequenceLim = Player1Seq.size();
+			player1turn = true;
+		}
+	}else{
+		// Depending on the random number, we will add a button to the sequence
+		if (random == 0)
+		{
+			Sequence.push_back(RED);
+		}
+		else if (random == 1)
+		{
+			Sequence.push_back(GREEN);
+		}
+		else if (random == 2)
+		{
+			Sequence.push_back(YELLOW);
+		}
+		else if (random == 3)
+		{
+			Sequence.push_back(BLUE);
+		}
+
+			// We will adjust the sequence limit to the new size of the Sequence list
+		sequenceLimit = Sequence.size();
+	}
+	
 	
 	
 }
@@ -242,13 +381,32 @@ bool ofApp::checkUserInput(Buttons input)
 {
 	// This function will varify if the user input matches the color
 	// of the sequence at the current index
-	if (Sequence[userIndex] == input)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
+	if(gameState == MultiplayerInput){
+		if (Player1Seq[player1Index] == input && player1turn == true)
+		{
+			return true;
+		}
+		else if(player1turn == true)
+		{
+			return false;
+		}
+		if (Player2Seq[player2Index] == input && player1turn == false)
+		{
+			return true;
+		}
+		else if(player1turn == false)
+		{
+			return false;
+		}
+	}else{
+		if (Sequence[userIndex] == input)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 }
 //--------------------------------------------------------------
@@ -313,7 +471,7 @@ void ofApp::keyPressed(int key)
 		gameState = StartUp;
 	}
 	if(gameState== FreeTap || gameState == Record || gameState == Play){
-		if(tolower(key) =='r' && FreeTapCounter ==0){
+		if(tolower(key) =='r' && FreeTapCounter ==0 && gameState != Record){
 			gameState = Record;
 		}
 		else if(tolower(key) == 'r' && gameState == Record){
@@ -352,11 +510,16 @@ void ofApp::mouseDragged(int x, int y, int button)
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button)
 {
+
 	if(gameState == StartUp){
 		NewGameMode->setPressed(x, y);
+		MultiplayerGM->setPressed(x, y);
 		if(NewGameMode->wasPressed()){
 			idle = false; //Why?
 			gameState = FreeTap;
+		}else if(MultiplayerGM->wasPressed()){
+			gameState = Multiplayer;
+			GameReset();
 		}
 	}
 
@@ -455,6 +618,50 @@ void ofApp::mousePressed(int x, int y, int button)
 		if (checkUserInput(color))
 		{
 			userIndex++;
+		}
+		// If not, then we will terminate the game by
+		// putting it in the GameOver state.
+		else
+		{
+			gameState = GameOver;
+		}
+	}
+	if( gameState == MultiplayerInput)
+	{
+		// We mark the pressed button as "pressed"
+		RedButton->setPressed(x, y);
+		BlueButton->setPressed(x, y);
+		YellowButton->setPressed(x, y);
+		GreenButton->setPressed(x, y);
+
+		// We check which button got pressed
+		if (RedButton->wasPressed())
+		{
+			color = RED;
+		}
+		else if (BlueButton->wasPressed())
+		{
+			color = BLUE;
+		}
+		else if (YellowButton->wasPressed())
+		{
+			color = YELLOW;
+		}
+		else if (GreenButton->wasPressed())
+		{
+			color = GREEN;
+		}
+		// Light up the pressed button for a few ticks
+		lightOn(color);
+		lightDisplayDuration = 15;
+		// If the user input is correct, we can continue checking
+		if (player1turn == true && checkUserInput(color))
+		{
+			player1Index++;
+		}
+		else if (player1turn == false && checkUserInput(color))
+		{
+			player2Index++;
 		}
 		// If not, then we will terminate the game by
 		// putting it in the GameOver state.

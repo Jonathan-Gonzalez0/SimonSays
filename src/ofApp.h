@@ -13,7 +13,10 @@ class ofApp : public ofBaseApp{
 		GameOver,
 		FreeTap,
 		Record,
-		Play
+		Play,
+		MultiplayerSequence,
+		Multiplayer,
+		MultiplayerInput
 	};
 
 	public:
@@ -47,6 +50,8 @@ class ofApp : public ofBaseApp{
 		//for us to be able to store the sequences
 		vector<Buttons> Sequence;
 		vector<Buttons> FreeTapSequence;
+		vector<Buttons> Player1Seq;
+        vector<Buttons> Player2Seq;
 
 		//Let's declare the buttons we will use
 		Button *RedButton;
@@ -54,6 +59,7 @@ class ofApp : public ofBaseApp{
 		Button *YellowButton;
 		Button *GreenButton;
 		Button *NewGameMode;
+		Button *MultiplayerGM;
 
 		//These will be mere images which we will draw on top
 		//of the actual buttons to give the mere illusion
@@ -66,6 +72,7 @@ class ofApp : public ofBaseApp{
 		ofImage logoLight;
 		ofImage startUpScreen;
 		ofImage gameOverScreen;
+		ofImage recordingIndicator;
 
 		//Few variables we'll need
         ofSoundPlayer backgroundMusic;
@@ -81,5 +88,12 @@ class ofApp : public ofBaseApp{
 		int FreeTapCounter = 0;
 		int FreeTapLim;
 		int FreeTapDuration =0;
+		int MultiplayerSequenceDuration = 0;
+		bool player1turn=true;
+        bool player2turn=false;
+		int player1Index = 0;
+		int player2Index = 0;
+		int player1SequenceLim;
+		int player2SequenceLim;
 		
 };
