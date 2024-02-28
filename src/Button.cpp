@@ -12,7 +12,7 @@ Button::Button(float x, float y, float width, float height, string imagePath = "
 
     //Load the image and the sound
     image.load(imagePath);
-    buttonSound.load(soundPath);
+    // buttonSound.load(soundPath);
 }
 
 void Button::render() {

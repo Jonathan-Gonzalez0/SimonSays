@@ -30,7 +30,7 @@ void ofApp::setup()
 	backgroundMusic.setLoop(true);
 	backgroundMusic.play();
 
-	gamemodeSound.load("sounds/clickGMButton.mp3");
+	// gamemodeSound.load("sounds/clickGMButton.mp3");
 
 	// Initial State
 	
@@ -48,6 +48,11 @@ void ofApp::update()
 		BlueButton->tick();
 		YellowButton->tick();
 		GreenButton->tick();
+	}
+
+	if(gameState == StartUp){
+		NewGameMode->tick();
+		MultiplayerGM->tick();
 	}
 
 	if (gameState == PlayerInput)
@@ -487,7 +492,7 @@ void ofApp::keyPressed(int key)
 {
 	// As long as we're not in Idle OR the gameState is GameOver;
 	// AND we press the SPACEBAR, we will reset the game
-	if ((!idle || gameState == GameOver) && tolower(key) == ' ')
+	if ((!idle || gameState == GameOver) && tolower(key) == ' ' && gameState != FreeTap && gameState != Record && gameState != Play && gameState != Multiplayer && gameState != MultiplayerSequence && gameState != MultiplayerInput && gameState != MultiGameOver)
 	{
 		GameReset();
 	}
@@ -538,12 +543,12 @@ void ofApp::mousePressed(int x, int y, int button)
 		NewGameMode->setPressed(x, y);
 		MultiplayerGM->setPressed(x, y);
 		if(NewGameMode->wasPressed()){
-			gamemodeSound.play();
+			// gamemodeSound.play();
 			idle = false;
 			gameState = FreeTap;
 		}
 		else if(MultiplayerGM->wasPressed()){
-			gamemodeSound.play();
+			// gamemodeSound.play();
 			gameState = Multiplayer;
 			GameReset();
 		}
