@@ -16,7 +16,8 @@ class ofApp : public ofBaseApp{
 		Play,
 		MultiplayerSequence,
 		Multiplayer,
-		MultiplayerInput
+		MultiplayerInput,
+		MultiGameOver,
 	};
 
 	public:
@@ -76,6 +77,7 @@ class ofApp : public ofBaseApp{
 
 		//Few variables we'll need
         ofSoundPlayer backgroundMusic;
+		ofSoundPlayer gamemodeSound;
 		int sequenceLimit = 1;
 		int userIndex = 1;
 		int showingSequenceDuration = 0;
@@ -95,5 +97,7 @@ class ofApp : public ofBaseApp{
 		int player2Index = 0;
 		int player1SequenceLim;
 		int player2SequenceLim;
-		
+		int p1Score=0;
+		int p2Score=0;
+		ofTrueTypeFont highscoreStr;
 };

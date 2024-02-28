@@ -9,8 +9,8 @@ void ofApp::setup()
 	BlueButton = new Button(ofGetWindowWidth() / 2 + 35, ofGetWindowHeight() / 2 - 10, 236, 290, "images/BlueButton.png", "sounds/BlueButton.mp3");
 	YellowButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 + 40, 287, 239, "images/YellowButton.png", "sounds/YellowButton.mp3");
 	GreenButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 - 260, 234, 294, "images/GreenButton.png", "sounds/GreenButton.mp3");
-	NewGameMode = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 400, 225, 200, "images/freeTap.png", "sounds/GreenButton.mp3");
-	MultiplayerGM = new Button(ofGetWindowWidth() / 2 - 440, ofGetWindowHeight() / 2 - 250, 150, 150, "images/multiplayerButtonImage.png", "sounds/YellowButton.mp3");
+	NewGameMode = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 400, 225, 200, "images/freeTap.png", "sounds/clickGMButton.mp3");
+	MultiplayerGM = new Button(ofGetWindowWidth() / 2 - 442, ofGetWindowHeight() / 2 - 250, 150, 150, "images/multiplayerButtonImage.png", "sounds/clickGMButton.mp3");
 
 	// Load the glowing images for the buttons
 	redLight.load("images/RedLight.png");
@@ -29,6 +29,8 @@ void ofApp::setup()
 	backgroundMusic.load("sounds/BackgroundMusic.mp3");
 	backgroundMusic.setLoop(true);
 	backgroundMusic.play();
+
+	gamemodeSound.load("sounds/clickGMButton.mp3");
 
 	// Initial State
 	
@@ -123,7 +125,7 @@ void ofApp::draw()
 	GreenButton->render();
 
 	if(gameState == Record){
-		recordingIndicator.draw(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 400, 225, 200);
+		recordingIndicator.draw(ofGetWindowWidth() / 2 - 450, ofGetWindowHeight() / 2 - 350, 200, 165);
 	}
 
 	if(gameState == StartUp){
@@ -179,10 +181,8 @@ void ofApp::draw()
 		{
 			gameState = FreeTap;
 		}
-		
+	}	
 
-
-}	
 	if(gameState == MultiplayerSequence){
 		MultiplayerSequenceDuration++;
 
@@ -227,6 +227,28 @@ void ofApp::draw()
 			gameState = MultiplayerInput;
 		}
 
+	}
+
+	if(gameState == MultiplayerSequence){
+		if(player1turn == true){
+			ofDrawBitmapString("Player 1 Turn.", 25, 100);
+		}
+		else if(player1turn == false){
+			player2turn = true;
+			ofDrawBitmapString("Player 2 Turn.",875, 100);
+		}
+	}
+
+	if(gameState==MultiGameOver){
+		ofDrawBitmapString("Game Over", 800, 100);
+		ofDrawBitmapString("Player 1 Score: " + ofToString(p1Score), 800, 115);
+		ofDrawBitmapString("Player 2 Score: " + ofToString(p2Score), 800, 130);
+		if(p1Score>p2Score){
+			ofDrawBitmapString("Player 1 Wins!", 800, 145);
+		}else if(p1Score<p2Score){
+			ofDrawBitmapString("Player 2 Wins!", 800, 145);
+		}
+		gameOverScreen.draw(0, 0, 1024, 768);
 	}
 	
 
@@ -384,6 +406,7 @@ bool ofApp::checkUserInput(Buttons input)
 	if(gameState == MultiplayerInput){
 		if (Player1Seq[player1Index] == input && player1turn == true)
 		{
+			p1Score+=10;
 			return true;
 		}
 		else if(player1turn == true)
@@ -392,6 +415,7 @@ bool ofApp::checkUserInput(Buttons input)
 		}
 		if (Player2Seq[player2Index] == input && player1turn == false)
 		{
+			p2Score+=10;
 			return true;
 		}
 		else if(player1turn == false)
@@ -488,7 +512,6 @@ void ofApp::keyPressed(int key)
 		FreeTapDuration = 60;
 		FreeTapLim = FreeTapSequence.size();
 		FreeTapCounter = 0;
-
 	}
 }
 
@@ -515,9 +538,12 @@ void ofApp::mousePressed(int x, int y, int button)
 		NewGameMode->setPressed(x, y);
 		MultiplayerGM->setPressed(x, y);
 		if(NewGameMode->wasPressed()){
-			idle = false; //Why?
+			gamemodeSound.play();
+			idle = false;
 			gameState = FreeTap;
-		}else if(MultiplayerGM->wasPressed()){
+		}
+		else if(MultiplayerGM->wasPressed()){
+			gamemodeSound.play();
 			gameState = Multiplayer;
 			GameReset();
 		}
@@ -556,7 +582,6 @@ void ofApp::mousePressed(int x, int y, int button)
 		}
 		lightOn(color);
 		lightDisplayDuration = 15;
-
 	}
 
 	if(gameState == FreeTap){
@@ -667,7 +692,7 @@ void ofApp::mousePressed(int x, int y, int button)
 		// putting it in the GameOver state.
 		else
 		{
-			gameState = GameOver;
+			gameState = MultiGameOver;
 		}
 	}
 }
