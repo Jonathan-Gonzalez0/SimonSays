@@ -9,9 +9,8 @@ void ofApp::setup()
 	BlueButton = new Button(ofGetWindowWidth() / 2 + 35, ofGetWindowHeight() / 2 - 10, 236, 290, "images/BlueButton.png", "sounds/BlueButton.mp3");
 	YellowButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 + 40, 287, 239, "images/YellowButton.png", "sounds/YellowButton.mp3");
 	GreenButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 - 260, 234, 294, "images/GreenButton.png", "sounds/GreenButton.mp3");
-	NewGameMode = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 400, 225, 200, "images/freeTap.png", "sounds/clickGMButton.mp3");
-	MultiplayerGM = new Button(ofGetWindowWidth() / 2 - 442, ofGetWindowHeight() / 2 - 250, 150, 150, "images/multiplayerButtonImage.png", "sounds/clickGMButton.mp3");
-
+	RecordAndPlayGM = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 450, 300, 300, "images/recordAndPlay.png", "sounds/clickGMButton.mp3");
+	MultiplayerGM = new Button(ofGetWindowWidth() - 192, ofGetWindowHeight() / 2 - 385, 150, 150, "images/multiplayerButtonImage.png", "sounds/clickGMButton.mp3");
 	// Load the glowing images for the buttons
 	redLight.load("images/RedLight.png");
 	blueLight.load("images/BlueLight.png");
@@ -24,6 +23,9 @@ void ofApp::setup()
 	startUpScreen.load("images/StartScreen.png");
 	gameOverScreen.load("images/GameOverScreen.png");
 	recordingIndicator.load("images/recordIndicator.png");
+	GameOverScreenEdited.load("images/Gameover.png");
+	SpaceBar.load("images/SpaceBar.png");
+	playButton.load("images/playButton.png");
 
 	// Load Music
 	backgroundMusic.load("sounds/BackgroundMusic.mp3");
@@ -33,8 +35,12 @@ void ofApp::setup()
 	// gamemodeSound.load("sounds/clickGMButton.mp3");
 
 	// Initial State
-	
+
 	gameState = StartUp;
+
+	// Loads Font
+	highscoreStr.load("fonts/PlayfairDisplay-Black.ttf", 32);
+	titleHighscoreStr.load("fonts/PlayfairDisplay-Black.ttf", 52);
 }
 //--------------------------------------------------------------
 void ofApp::update()
@@ -42,7 +48,7 @@ void ofApp::update()
 
 	// We will tick the buttons, aka constantly update them
 	// while expecting input from the user to see if anything changed
-	if ( gameState == FreeTap || gameState == Record)
+	if (gameState == RecordAndPlay || gameState == Record)
 	{
 		RedButton->tick();
 		BlueButton->tick();
@@ -50,8 +56,9 @@ void ofApp::update()
 		GreenButton->tick();
 	}
 
-	if(gameState == StartUp){
-		NewGameMode->tick();
+	if (gameState == StartUp)
+	{
+		RecordAndPlayGM->tick();
 		MultiplayerGM->tick();
 	}
 
@@ -86,23 +93,39 @@ void ofApp::update()
 		// sequence and we can proceed with the next level
 		if (player1Index == player1SequenceLim && player1turn == true)
 		{
-			player1turn = false;
-			MultiplayerSequenceDuration= 0;
-			gameState = MultiplayerSequence;
-
+			if (!fail2)
+			{
+				player1turn = false;
+				MultiplayerSequenceDuration = 0;
+				gameState = MultiplayerSequence;
+			}
+			else
+			{
+				gameState = MultiplayerSequence;
+				generateSequence();
+				player1Index = 0;
+				MultiplayerSequenceDuration = 0;
+			}
 		}
-		if(player2Index == player2SequenceLim && player1turn == false){
-			player1turn = true;
+		if (player2Index == player2SequenceLim && player1turn == false)
+		{
+			if (!fail1)
+			{
+				player1turn = true;
+				player1Index = 0;
+			}
 			gameState = MultiplayerSequence;
 			generateSequence();
-			player1Index = 0;
 			player2Index = 0;
 			MultiplayerSequenceDuration = 0;
-
 		}
 	}
 	// This will take care of turning on the lights after a few
 	// ticks so that they dont stay turned on forever or too long
+	if (gameState == MultiGameOver)
+	{
+		MultiplayerSequenceDuration++;
+	}
 	if (lightDisplayDuration > 0)
 	{
 		lightDisplayDuration--;
@@ -129,12 +152,27 @@ void ofApp::draw()
 	YellowButton->render();
 	GreenButton->render();
 
-	if(gameState == Record){
+	if(gameState == PlayerInput || gameState==PlayingSequence){
+		highscoreStr.drawString("Classic Mode", 75,ofGetWindowHeight() - 50);
+	}
+	if (gameState == Record)
+	{
+		highscoreStr.drawString("Record/Play Mode", 75,ofGetWindowHeight() - 50);
 		recordingIndicator.draw(ofGetWindowWidth() / 2 - 450, ofGetWindowHeight() / 2 - 350, 200, 165);
 	}
 
-	if(gameState == StartUp){
-		NewGameMode->render();
+	if(gameState == Play){
+		highscoreStr.drawString("Record/Play Mode", 75,ofGetWindowHeight() - 50);
+		playButton.draw(ofGetWindowWidth() / 2 - 400, ofGetWindowHeight() / 2 - 300, 100, 65);
+	}
+
+	if(gameState == RecordAndPlay){
+		highscoreStr.drawString("Record/Play Mode", 75,ofGetWindowHeight() - 50);
+	}
+
+	if (gameState == StartUp)
+	{
+		RecordAndPlayGM->render();
 		MultiplayerGM->render();
 	}
 
@@ -142,7 +180,7 @@ void ofApp::draw()
 	// the sequence to the user before accepting any input
 	if (gameState == PlayingSequence)
 	{
-		
+
 		showingSequenceDuration++;
 		if (showingSequenceDuration == 120)
 		{
@@ -165,97 +203,117 @@ void ofApp::draw()
 		}
 	}
 
-	if(gameState == Play)
+	if (gameState == Play)
 	{
-		FreeTapDuration++;
-		if(FreeTapDuration ==120)
+		RecordAndPlayDuration++;
+		if (RecordAndPlayDuration == 120)
 		{
-			color = FreeTapSequence[FreeTapCounter];
+			color = RecordAndPlaySequence[RecordAndPlayCounter];
 			lightOn(color);
 			lightDisplayDuration = 30;
-			
 		}
-			
-		if (FreeTapDuration ==140)
+
+		if (RecordAndPlayDuration == 140)
 		{
 			lightOff(color);
-			FreeTapDuration = 60;
-			FreeTapCounter++;
+			RecordAndPlayDuration = 60;
+			RecordAndPlayCounter++;
 		}
-			if (FreeTapCounter == FreeTapLim)
+		if (RecordAndPlayCounter == RecordAndPlayLim)
 		{
-			gameState = FreeTap;
+			gameState = RecordAndPlay;
 		}
-	}	
+	}
 
-	if(gameState == MultiplayerSequence){
+	if (gameState == MultiplayerSequence)
+	{
 		MultiplayerSequenceDuration++;
+		highscoreStr.drawString("Multiplayer Mode", 75,ofGetWindowHeight() - 50);
+		if (MultiplayerSequenceDuration == 120 && player1turn == true && !fail1)
+		{
 
-		if(MultiplayerSequenceDuration==120 && player1turn==true){
-
-			color=Player1Seq[player1Index];
+			color = Player1Seq[player1Index];
 
 			lightOn(color);
 
-			lightDisplayDuration=30;
+			lightDisplayDuration = 30;
 		}
-		if (MultiplayerSequenceDuration == 140 && player1turn == true)
+		if (MultiplayerSequenceDuration == 140 && player1turn == true && !fail1)
 		{
 			lightOff(color);
 			MultiplayerSequenceDuration = 60;
 			player1Index++;
 		}
-		if (player1Index == player1SequenceLim &&  player1turn == true)
+		if (player1Index == player1SequenceLim && player1turn == true && !fail1)
 		{
 			lightOff(color);
 			player1Index = 0;
 			gameState = MultiplayerInput;
 		}
-		if(MultiplayerSequenceDuration==120 && player1turn == false){
+		if (MultiplayerSequenceDuration == 120 && player1turn == false && !fail2)
+		{
 
-			color=Player2Seq[player2Index];
+			color = Player2Seq[player2Index];
 
 			lightOn(color);
 
-			lightDisplayDuration=30;
+			lightDisplayDuration = 30;
 		}
-		if (MultiplayerSequenceDuration == 140 && player1turn == false)
+		if (MultiplayerSequenceDuration == 140 && player1turn == false && !fail2)
 		{
 			lightOff(color);
 			MultiplayerSequenceDuration = 60;
 			player2Index++;
 		}
-		if (player2Index == player2SequenceLim && player1turn == false)
+		if (player2Index == player2SequenceLim && player1turn == false && !fail2)
 		{
 			lightOff(color);
 			player2Index = 0;
 			gameState = MultiplayerInput;
 		}
-
 	}
 
-	if(gameState == MultiplayerSequence){
-		if(player1turn == true){
-			ofDrawBitmapString("Player 1 Turn.", 25, 100);
+	if (gameState == MultiplayerSequence || gameState == MultiplayerInput)
+	{
+		highscoreStr.drawString("Multiplayer Mode", 75,ofGetWindowHeight() - 50);
+		if (player1turn == true)
+		{
+			highscoreStr.drawString("Player 1 Turn:", 25, 100);
+			highscoreStr.drawString("Score: " + ofToString(p1Score), ofGetWindowWidth() - 275, 100);
 		}
-		else if(player1turn == false){
-			player2turn = true;
-			ofDrawBitmapString("Player 2 Turn.",875, 100);
+		else if (player1turn == false)
+		{
+			highscoreStr.drawString("Player 2 Turn:", 25, 100);
+			highscoreStr.drawString("Score: " + ofToString(p2Score), ofGetWindowWidth() - 275, 100);
 		}
 	}
 
-	if(gameState==MultiGameOver){
-		ofDrawBitmapString("Game Over", 800, 100);
-		ofDrawBitmapString("Player 1 Score: " + ofToString(p1Score), 800, 115);
-		ofDrawBitmapString("Player 2 Score: " + ofToString(p2Score), 800, 130);
-		if(p1Score>p2Score){
-			ofDrawBitmapString("Player 1 Wins!", 800, 145);
-		}else if(p1Score<p2Score){
-			ofDrawBitmapString("Player 2 Wins!", 800, 145);
+	if (gameState == MultiGameOver)
+	{
+		if (MultiplayerSequenceDuration <= 120)
+		{
+			GameOverScreenEdited.draw(0, 0, 1024, 768);
 		}
-		gameOverScreen.draw(0, 0, 1024, 768);
+		else
+		{
+			SpaceBar.draw(0, 0, 1024, 768);
+			if (p1Score > p2Score)
+			{
+				titleHighscoreStr.drawString("Player 1 Wins!", ofGetWindowWidth() / 2 - 232, 100);
+			}
+			else if (p1Score == p2Score)
+			{
+				titleHighscoreStr.drawString("Tie!", ofGetWindowWidth() / 2 - 70, 100);
+			}
+			else
+			{
+				titleHighscoreStr.drawString("Player 2 Wins!", ofGetWindowWidth() / 2 - 232, 100);
+			}
+			titleHighscoreStr.drawString("Stats:", ofGetWindowWidth() / 2 - 100, 200);
+			highscoreStr.drawString("Player 1 Score: " + ofToString(p1Score), ofGetWindowWidth() / 2 - 175, 300);
+			highscoreStr.drawString("Player 2 Score: " + ofToString(p2Score), ofGetWindowWidth() / 2 - 175, 400);
+		}
 	}
-	
 
 	// StartUP (You dont need to pay much attention to this)
 	//(This is only to create a animation effect at the start of the game)
@@ -285,7 +343,7 @@ void ofApp::draw()
 	}
 
 	// Part of the Start Up
-	if (logoIsReady)
+	if (logoIsReady && gameState != MultiGameOver)
 	{
 		logo.draw(ofGetWindowWidth() / 2 - 160, ofGetWindowHeight() / 2 - 150, 330, 330);
 	}
@@ -307,7 +365,8 @@ void ofApp::GameReset()
 {
 	// This function will reset the game to its initial state
 	// and generate a new sequence
-	if(gameState == Multiplayer){
+	if (gameState == Multiplayer)
+	{
 		lightOff(RED);
 		lightOff(BLUE);
 		lightOff(YELLOW);
@@ -317,12 +376,16 @@ void ofApp::GameReset()
 		gameState = MultiplayerSequence;
 		player1Index = 0;
 		player2Index = 0;
+		fail1 = false;
+		fail2 = false;
+		p1Score = 0;
+		p2Score = 0;
+		player1turn = true;
 		generateSequence();
 		MultiplayerSequenceDuration = 0;
-		
-		
-		
-	}else{
+	}
+	else
+	{
 		lightOff(RED);
 		lightOff(BLUE);
 		lightOff(YELLOW);
@@ -332,7 +395,7 @@ void ofApp::GameReset()
 		userIndex = 0;
 		gameState = PlayingSequence;
 		showingSequenceDuration = 0;
-	}	
+	}
 }
 
 //--------------------------------------------------------------
@@ -340,44 +403,65 @@ void ofApp::generateSequence()
 {
 	// This function will generate a random number between 0 and 3
 	int random = ofRandom(4);
-	if(gameState == MultiplayerSequence){
+	if (gameState == MultiplayerSequence)
+	{
 		random = ofRandom(4);
-		if(player1turn==true){
-			if(random==0){
+		if (player1turn == true)
+		{
+			if (random == 0)
+			{
 
 				Player1Seq.push_back(RED);
-
-			}else if (random == 1){	
+			}
+			else if (random == 1)
+			{
 
 				Player1Seq.push_back(GREEN);
-
-			}else if (random == 2){
+			}
+			else if (random == 2)
+			{
 
 				Player1Seq.push_back(YELLOW);
-
-			}else if (random == 3){
+			}
+			else if (random == 3)
+			{
 
 				Player1Seq.push_back(BLUE);
-
 			}
-			player1turn = false;
+			if (!fail2)
+			{
+				player1turn = false;
+			}
 			player1SequenceLim = Player1Seq.size();
 		}
 		random = ofRandom(4);
-		if(player1turn==false){
-				if(random==0){
-					Player2Seq.push_back(RED);
-				}else if (random == 1){	
-					Player2Seq.push_back(GREEN);
-				}else if (random == 2){
-					Player2Seq.push_back(YELLOW);
-				}else if (random == 3){
-					Player2Seq.push_back(BLUE);
-				}
-			player2SequenceLim = Player1Seq.size();
-			player1turn = true;
+		if (player1turn == false)
+		{
+			if (random == 0)
+			{
+				Player2Seq.push_back(RED);
+			}
+			else if (random == 1)
+			{
+				Player2Seq.push_back(GREEN);
+			}
+			else if (random == 2)
+			{
+				Player2Seq.push_back(YELLOW);
+			}
+			else if (random == 3)
+			{
+				Player2Seq.push_back(BLUE);
+			}
+			player2SequenceLim = Player2Seq.size();
+			if (!fail1)
+			{
+				player1turn = true;
+			}
 		}
-	}else{
+	}
+	else
+	{
 		// Depending on the random number, we will add a button to the sequence
 		if (random == 0)
 		{
@@ -396,38 +480,36 @@ void ofApp::generateSequence()
 			Sequence.push_back(BLUE);
 		}
 
-			// We will adjust the sequence limit to the new size of the Sequence list
+		// We will adjust the sequence limit to the new size of the Sequence list
 		sequenceLimit = Sequence.size();
 	}
-	
-	
-	
 }
 //--------------------------------------------------------------
 bool ofApp::checkUserInput(Buttons input)
 {
 	// This function will varify if the user input matches the color
 	// of the sequence at the current index
-	if(gameState == MultiplayerInput){
+	if (gameState == MultiplayerInput)
+	{
 		if (Player1Seq[player1Index] == input && player1turn == true)
 		{
-			p1Score+=10;
 			return true;
 		}
-		else if(player1turn == true)
+		else if (player1turn == true)
 		{
 			return false;
 		}
 		if (Player2Seq[player2Index] == input && player1turn == false)
 		{
-			p2Score+=10;
 			return true;
 		}
-		else if(player1turn == false)
+		else if (player1turn == false)
 		{
 			return false;
 		}
-	}else{
+	}
+	else
+	{
 		if (Sequence[userIndex] == input)
 		{
 			return true;
@@ -492,31 +574,42 @@ void ofApp::keyPressed(int key)
 {
 	// As long as we're not in Idle OR the gameState is GameOver;
 	// AND we press the SPACEBAR, we will reset the game
-	if ((!idle || gameState == GameOver) && tolower(key) == ' ' && gameState != FreeTap && gameState != Record && gameState != Play && gameState != Multiplayer && gameState != MultiplayerSequence && gameState != MultiplayerInput && gameState != MultiGameOver)
+	if ((!idle || gameState == GameOver) && tolower(key) == ' ' && gameState != RecordAndPlay && gameState != Record && gameState != Play && gameState != Multiplayer && gameState != MultiplayerSequence && gameState != MultiplayerInput && gameState != MultiGameOver)
 	{
 		GameReset();
 	}
-	if(key == OF_KEY_BACKSPACE){
+	if (key == OF_KEY_BACKSPACE)
+	{
 		gameState = StartUp;
 	}
-	if(gameState== FreeTap || gameState == Record || gameState == Play){
-		if(tolower(key) =='r' && FreeTapCounter ==0 && gameState != Record){
+	if (gameState == RecordAndPlay || gameState == Record || gameState == Play)
+	{
+		if (tolower(key) == 'r' && RecordAndPlayCounter == 0 && gameState != Record)
+		{
 			gameState = Record;
 		}
-		else if(tolower(key) == 'r' && gameState == Record){
-			gameState = FreeTap;
+		else if (tolower(key) == 'r' && gameState == Record)
+		{
+			gameState = RecordAndPlay;
 		}
-		else if(tolower(key) == 'r' && FreeTapCounter != 0){
-			FreeTapSequence.clear();
-			FreeTapCounter = 0;
+		else if (tolower(key) == 'r' && RecordAndPlayCounter != 0)
+		{
+			RecordAndPlaySequence.clear();
+			RecordAndPlayCounter = 0;
 			gameState = Record;
 		}
 	}
-	if(tolower(key) == 'p'){
+	if (tolower(key) == 'p' && RecordAndPlayCounter != 0 )
+	{
 		gameState = Play;
-		FreeTapDuration = 60;
-		FreeTapLim = FreeTapSequence.size();
-		FreeTapCounter = 0;
+		RecordAndPlayDuration = 60;
+		RecordAndPlayLim = RecordAndPlaySequence.size();
+		RecordAndPlayCounter = 0;
+	}
+	if (gameState == MultiGameOver && tolower(key) == ' ' && MultiplayerSequenceDuration > 120)
+	{
+		gameState = Multiplayer;
+		GameReset();
 	}
 }
 
@@ -539,22 +632,26 @@ void ofApp::mouseDragged(int x, int y, int button)
 void ofApp::mousePressed(int x, int y, int button)
 {
 
-	if(gameState == StartUp){
-		NewGameMode->setPressed(x, y);
+	if (gameState == StartUp)
+	{
+		RecordAndPlayGM->setPressed(x, y);
 		MultiplayerGM->setPressed(x, y);
-		if(NewGameMode->wasPressed()){
+		if (RecordAndPlayGM->wasPressed())
+		{
 			// gamemodeSound.play();
 			idle = false;
-			gameState = FreeTap;
+			gameState = RecordAndPlay;
 		}
-		else if(MultiplayerGM->wasPressed()){
+		else if (MultiplayerGM->wasPressed())
+		{
 			// gamemodeSound.play();
 			gameState = Multiplayer;
 			GameReset();
 		}
 	}
 
-	if(gameState == Record){
+	if (gameState == Record)
+	{
 		RedButton->setPressed(x, y);
 		BlueButton->setPressed(x, y);
 		YellowButton->setPressed(x, y);
@@ -563,33 +660,33 @@ void ofApp::mousePressed(int x, int y, int button)
 		if (RedButton->wasPressed())
 		{
 			color = RED;
-			FreeTapSequence.push_back(RED);
-			FreeTapCounter++; //Counts how many timwes we pressed the color.
-		
+			RecordAndPlaySequence.push_back(RED);
+			RecordAndPlayCounter++; // Counts how many timwes we pressed the color.
 		}
 		else if (BlueButton->wasPressed())
 		{
 			color = BLUE;
-			FreeTapSequence.push_back(BLUE);
-			FreeTapCounter++;
+			RecordAndPlaySequence.push_back(BLUE);
+			RecordAndPlayCounter++;
 		}
 		else if (YellowButton->wasPressed())
 		{
 			color = YELLOW;
-			FreeTapSequence.push_back(YELLOW);
-			FreeTapCounter++;
+			RecordAndPlaySequence.push_back(YELLOW);
+			RecordAndPlayCounter++;
 		}
 		else if (GreenButton->wasPressed())
 		{
 			color = GREEN;
-			FreeTapSequence.push_back(GREEN);
-			FreeTapCounter++;
+			RecordAndPlaySequence.push_back(GREEN);
+			RecordAndPlayCounter++;
 		}
 		lightOn(color);
 		lightDisplayDuration = 15;
 	}
 
-	if(gameState == FreeTap){
+	if (gameState == RecordAndPlay)
+	{
 		RedButton->setPressed(x, y);
 		BlueButton->setPressed(x, y);
 		YellowButton->setPressed(x, y);
@@ -598,7 +695,6 @@ void ofApp::mousePressed(int x, int y, int button)
 		if (RedButton->wasPressed())
 		{
 			color = RED;
-		
 		}
 		else if (BlueButton->wasPressed())
 		{
@@ -614,9 +710,9 @@ void ofApp::mousePressed(int x, int y, int button)
 		}
 		lightOn(color);
 		lightDisplayDuration = 15;
-	} 
+	}
 
-	if(!idle && gameState == PlayerInput)
+	if (!idle && gameState == PlayerInput)
 	{
 		// We mark the pressed button as "pressed"
 		RedButton->setPressed(x, y);
@@ -656,7 +752,7 @@ void ofApp::mousePressed(int x, int y, int button)
 			gameState = GameOver;
 		}
 	}
-	if( gameState == MultiplayerInput)
+	if (gameState == MultiplayerInput)
 	{
 		// We mark the pressed button as "pressed"
 		RedButton->setPressed(x, y);
@@ -685,19 +781,32 @@ void ofApp::mousePressed(int x, int y, int button)
 		lightOn(color);
 		lightDisplayDuration = 15;
 		// If the user input is correct, we can continue checking
-		if (player1turn == true && checkUserInput(color))
+		if (player1turn == true && checkUserInput(color) && !fail1)
 		{
 			player1Index++;
+			p1Score += 1;
 		}
-		else if (player1turn == false && checkUserInput(color))
+		else if (player1turn == true)
+		{
+			player1Index = player1SequenceLim;
+			fail1 = true;
+		}
+		else if (player1turn == false && checkUserInput(color) && !fail2)
 		{
 			player2Index++;
+			p2Score += 1;
+		}
+		else if (player1turn == false)
+		{
+			player2Index = player2SequenceLim;
+			fail2 = true;
 		}
 		// If not, then we will terminate the game by
 		// putting it in the GameOver state.
-		else
+		if (fail1 && fail2)
 		{
 			gameState = MultiGameOver;
+			MultiplayerSequenceDuration = 0;
 		}
 	}
 }
@@ -807,4 +916,3 @@ void ofApp::startUpSequence(int count)
 		idle = false;
 	}
 }
-
