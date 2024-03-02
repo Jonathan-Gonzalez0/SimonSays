@@ -9,9 +9,9 @@ void ofApp::setup()
 	BlueButton = new Button(ofGetWindowWidth() / 2 + 35, ofGetWindowHeight() / 2 - 10, 236, 290, "images/BlueButton.png", "sounds/BlueButton.mp3");
 	YellowButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 + 40, 287, 239, "images/YellowButton.png", "sounds/YellowButton.mp3");
 	GreenButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 - 260, 234, 294, "images/GreenButton.png", "sounds/GreenButton.mp3");
-	RecordAndPlayGM = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 450, 300, 300, "images/recordAndPlay.png", "sounds/RedButton.mp3");
-	MultiplayerGM = new Button(ofGetWindowWidth() - 192, ofGetWindowHeight() / 2 - 385, 150, 150, "images/multiplayerButtonImage.png", "sounds/RedButton.mp3");
-	LightningGM = new Button(ofGetWindowWidth()/2 - 500, ofGetWindowHeight() - 235, 250, 200, "images/lightning.png", "sounds/RedButton.mp3");
+	RecordAndPlayGM = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 450, 300, 300, "images/recordAndPlay.png", "sounds/arcade.mp3");
+	MultiplayerGM = new Button(ofGetWindowWidth() - 192, ofGetWindowHeight() / 2 - 385, 150, 150, "images/multiplayerButtonImage.png", "sounds/arcade.mp3");
+	LightningGM = new Button(ofGetWindowWidth()/2 - 500, ofGetWindowHeight() - 235, 250, 200, "images/lightning.png", "sounds/arcade.mp3");
 	// Load the glowing images for the buttons
 	redLight.load("images/RedLight.png");
 	blueLight.load("images/BlueLight.png");
@@ -739,17 +739,18 @@ void ofApp::mousePressed(int x, int y, int button)
 		LightningGM->setPressed(x,y);
 		if (RecordAndPlayGM->wasPressed())
 		{
-			// gamemodeSound.play();
+			RecordAndPlayGM->playSound();
 			idle = false;
 			gameState = RecordAndPlay;
 		}
 		else if (MultiplayerGM->wasPressed())
 		{
-			// gamemodeSound.play();
+			MultiplayerGM->playSound();
 			gameState = Multiplayer;
 			GameReset();
 		}
 		else if(LightningGM->wasPressed()){
+			LightningGM->playSound();
 			gameState = Lightning;
 			GameReset();
 		}
