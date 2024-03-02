@@ -86,7 +86,7 @@ private:
 
 	// Few variables we'll need
 	ofSoundPlayer backgroundMusic;
-	ofSoundPlayer gamemodeSound;
+	//ofSoundPlayer gamemodeSound;
 	int sequenceLimit = 1;
 	int userIndex = 1;
 	int showingSequenceDuration = 0;
