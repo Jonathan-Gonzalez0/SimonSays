@@ -20,6 +20,10 @@ class ofApp : public ofBaseApp
 		Multiplayer,
 		MultiplayerInput,
 		MultiGameOver,
+		Lightning,
+		lightningSequence,
+		lightningInput,
+		lightGameOver
 	};
 
 public:
@@ -62,6 +66,7 @@ private:
 	Button *GreenButton;
 	Button *RecordAndPlayGM;
 	Button *MultiplayerGM;
+	Button *LightningGM;
 
 	// These will be mere images which we will draw on top
 	// of the actual buttons to give the mere illusion
@@ -104,6 +109,8 @@ private:
 	int p2Score = 0;
 	bool fail1 = false;
 	bool fail2 = false;
+	int reduce = 0;
+	int round = 1;
 
 	// Font
 	ofTrueTypeFont highscoreStr;

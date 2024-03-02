@@ -11,6 +11,7 @@ void ofApp::setup()
 	GreenButton = new Button(ofGetWindowWidth() / 2 - 260, ofGetWindowHeight() / 2 - 260, 234, 294, "images/GreenButton.png", "sounds/GreenButton.mp3");
 	RecordAndPlayGM = new Button(ofGetWindowWidth() / 2 - 500, ofGetWindowHeight() / 2 - 450, 300, 300, "images/recordAndPlay.png", "sounds/clickGMButton.mp3");
 	MultiplayerGM = new Button(ofGetWindowWidth() - 192, ofGetWindowHeight() / 2 - 385, 150, 150, "images/multiplayerButtonImage.png", "sounds/clickGMButton.mp3");
+	LightningGM = new Button(ofGetWindowWidth()/2 - 500, ofGetWindowHeight() - 235, 250, 200, "images/lightning.png", "sounds/clickGMButton.mp3");
 	// Load the glowing images for the buttons
 	redLight.load("images/RedLight.png");
 	blueLight.load("images/BlueLight.png");
@@ -60,6 +61,7 @@ void ofApp::update()
 	{
 		RecordAndPlayGM->tick();
 		MultiplayerGM->tick();
+		LightningGM->tick();
 	}
 
 	if (gameState == PlayerInput)
@@ -78,6 +80,30 @@ void ofApp::update()
 			userIndex = 0;
 			showingSequenceDuration = 0;
 			gameState = PlayingSequence;
+		}
+	}
+
+	if (gameState == lightningInput)
+	{
+		RedButton->tick();
+		BlueButton->tick();
+		YellowButton->tick();
+		GreenButton->tick();
+
+		// If the amount of user input equals the sequence limit
+		// that means the user has successfully completed the whole
+		// sequence and we can proceed with the next level
+		if (userIndex == sequenceLimit)
+		{
+			reduce += 4;
+			if(reduce >= 29){
+				reduce = 29;
+			}
+			round++;
+			generateSequence();
+			userIndex = 0;
+			showingSequenceDuration = 0;
+			gameState = lightningSequence;
 		}
 	}
 
@@ -170,10 +196,16 @@ void ofApp::draw()
 		highscoreStr.drawString("Record/Play Mode", 75,ofGetWindowHeight() - 50);
 	}
 
+	if(gameState == lightningInput || gameState==lightningSequence){
+		highscoreStr.drawString("Lightning Mode", 75,ofGetWindowHeight() - 50);
+		highscoreStr.drawString("Round: " + ofToString(round), 50, 100);
+	}
+
 	if (gameState == StartUp)
 	{
 		RecordAndPlayGM->render();
 		MultiplayerGM->render();
+		LightningGM->render();
 	}
 
 	// This whole if statement will take care of showing
@@ -200,6 +232,31 @@ void ofApp::draw()
 			lightOff(color);
 			userIndex = 0;
 			gameState = PlayerInput;
+		}
+	}
+
+	if (gameState == lightningSequence)
+	{
+
+		showingSequenceDuration++;
+		if (showingSequenceDuration == 120)
+		{
+			color = Sequence[userIndex];
+			lightOn(color);
+			lightDisplayDuration = 30-reduce;
+		}
+
+		if (showingSequenceDuration == 150-reduce)
+		{
+			lightOff(color);
+			showingSequenceDuration = 60+reduce;
+			userIndex++;
+		}
+		if (userIndex == sequenceLimit)
+		{
+			lightOff(color);
+			userIndex = 0;
+			gameState = lightningInput;
 		}
 	}
 
@@ -353,6 +410,11 @@ void ofApp::draw()
 	{
 		gameOverScreen.draw(0, 0, 1024, 768);
 	}
+	
+	if (gameState == lightGameOver)
+	{
+		gameOverScreen.draw(0, 0, 1024, 768);
+	}
 
 	// This will draw the "Press to Start" screen at the beginning
 	else if (!idle && gameState == StartUp)
@@ -383,6 +445,19 @@ void ofApp::GameReset()
 		player1turn = true;
 		generateSequence();
 		MultiplayerSequenceDuration = 0;
+	}
+	else if(gameState == Lightning){
+		lightOff(RED);
+		lightOff(BLUE);
+		lightOff(YELLOW);
+		lightOff(GREEN);
+		Sequence.clear();
+		gameState = lightningSequence;
+		generateSequence();
+		userIndex = 0;
+		showingSequenceDuration = 0;
+		reduce = 0;
+		round = 1;
 	}
 	else
 	{
@@ -459,6 +534,27 @@ void ofApp::generateSequence()
 				player1turn = true;
 			}
 		}
+	}
+	else if(gameState == lightningSequence){
+		if (random == 0)
+		{
+			Sequence.push_back(RED);
+		}
+		else if (random == 1)
+		{
+			Sequence.push_back(GREEN);
+		}
+		else if (random == 2)
+		{
+			Sequence.push_back(YELLOW);
+		}
+		else if (random == 3)
+		{
+			Sequence.push_back(BLUE);
+		}
+
+		// We will adjust the sequence limit to the new size of the Sequence list
+		sequenceLimit = Sequence.size();
 	}
 	else
 	{
@@ -574,8 +670,12 @@ void ofApp::keyPressed(int key)
 {
 	// As long as we're not in Idle OR the gameState is GameOver;
 	// AND we press the SPACEBAR, we will reset the game
-	if ((!idle || gameState == GameOver) && tolower(key) == ' ' && gameState != RecordAndPlay && gameState != Record && gameState != Play && gameState != Multiplayer && gameState != MultiplayerSequence && gameState != MultiplayerInput && gameState != MultiGameOver)
+	if ((!idle || gameState == GameOver) && tolower(key) == ' ' && gameState != RecordAndPlay && gameState != Record && gameState != Play && gameState != Multiplayer && gameState != MultiplayerSequence && gameState != MultiplayerInput && gameState != MultiGameOver && gameState != Lightning && gameState != lightningSequence && gameState != lightningInput && gameState != lightGameOver)
 	{
+		GameReset();
+	}
+	if(gameState == lightGameOver && tolower(key) == ' '){
+		gameState = Lightning;
 		GameReset();
 	}
 	if (key == OF_KEY_BACKSPACE)
@@ -636,6 +736,7 @@ void ofApp::mousePressed(int x, int y, int button)
 	{
 		RecordAndPlayGM->setPressed(x, y);
 		MultiplayerGM->setPressed(x, y);
+		LightningGM->setPressed(x,y);
 		if (RecordAndPlayGM->wasPressed())
 		{
 			// gamemodeSound.play();
@@ -646,6 +747,10 @@ void ofApp::mousePressed(int x, int y, int button)
 		{
 			// gamemodeSound.play();
 			gameState = Multiplayer;
+			GameReset();
+		}
+		else if(LightningGM->wasPressed()){
+			gameState = Lightning;
 			GameReset();
 		}
 	}
@@ -750,6 +855,46 @@ void ofApp::mousePressed(int x, int y, int button)
 		else
 		{
 			gameState = GameOver;
+		}
+	}
+	if (gameState == lightningInput)
+	{
+		// We mark the pressed button as "pressed"
+		RedButton->setPressed(x, y);
+		BlueButton->setPressed(x, y);
+		YellowButton->setPressed(x, y);
+		GreenButton->setPressed(x, y);
+
+		// We check which button got pressed
+		if (RedButton->wasPressed())
+		{
+			color = RED;
+		}
+		else if (BlueButton->wasPressed())
+		{
+			color = BLUE;
+		}
+		else if (YellowButton->wasPressed())
+		{
+			color = YELLOW;
+		}
+		else if (GreenButton->wasPressed())
+		{
+			color = GREEN;
+		}
+		// Light up the pressed button for a few ticks
+		lightOn(color);
+		lightDisplayDuration = 15;
+		// If the user input is correct, we can continue checking
+		if (checkUserInput(color))
+		{
+			userIndex++;
+		}
+		// If not, then we will terminate the game by
+		// putting it in the GameOver state.
+		else
+		{
+			gameState = lightGameOver;
 		}
 	}
 	if (gameState == MultiplayerInput)
